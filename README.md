@@ -116,9 +116,14 @@ sharp('input.jpg').resize(300, 200).toFile('output.jpg', function(err) {
 ```
 
 ```javascript
-var transformer = sharp().resize(300, 200).crop(sharp.gravity.north);
-readableStream.pipe(transformer).pipe(writableStream);
+var transformer = sharp()
+  .resize(300, 200)
+  .crop(sharp.gravity.north)
+  .on('error', function(err) {
+    console.log(err);
+  });
 // Read image data from readableStream, resize and write image data to writableStream
+readableStream.pipe(transformer).pipe(writableStream);
 ```
 
 ```javascript
@@ -270,6 +275,19 @@ for example:
   raw: { id: 'raw',
     input: { file: false, buffer: false, stream: false },
     output: { file: false, buffer: true, stream: true } } }
+```
+
+#### queue
+
+An EventEmitter that emits a `change` event when a task is either:
+
+* queued, waiting for _libuv_ to provide a worker thread
+* complete
+
+```javascript
+sharp.queue.on('change', function(queueLength) {
+  console.log('Queue contains ' + queueLength + ' task(s)');
+});
 ```
 
 ### Input methods

@@ -263,7 +263,34 @@ describe('Input/output', function() {
     done();
   });
 
-  it('Progressive image', function(done) {
+  it('Progressive JPEG image', function(done) {
+    sharp(fixtures.inputJpg)
+      .resize(320, 240)
+      .progressive(false)
+      .toBuffer(function(err, nonProgressiveData, nonProgressiveInfo) {
+        if (err) throw err;
+        assert.strictEqual(true, nonProgressiveData.length > 0);
+        assert.strictEqual(nonProgressiveData.length, nonProgressiveInfo.size);
+        assert.strictEqual('jpeg', nonProgressiveInfo.format);
+        assert.strictEqual(320, nonProgressiveInfo.width);
+        assert.strictEqual(240, nonProgressiveInfo.height);
+        sharp(fixtures.inputJpg)
+          .resize(320, 240)
+          .progressive()
+          .toBuffer(function(err, progressiveData, progressiveInfo) {
+            if (err) throw err;
+            assert.strictEqual(true, progressiveData.length > 0);
+            assert.strictEqual(progressiveData.length, progressiveInfo.size);
+            assert.strictEqual(false, progressiveData.length === nonProgressiveData.length);
+            assert.strictEqual('jpeg', progressiveInfo.format);
+            assert.strictEqual(320, progressiveInfo.width);
+            assert.strictEqual(240, progressiveInfo.height);
+            done();
+          });
+      });
+  });
+
+  it('Progressive PNG image', function(done) {
     sharp(fixtures.inputJpg)
       .resize(320, 240)
       .png()
@@ -682,6 +709,24 @@ describe('Input/output', function() {
       });
     });
 
+  });
+
+  it('Queue length change events', function(done) {
+    var eventCounter = 0;
+    var queueListener = function(queueLength) {
+      assert.strictEqual('number', typeof queueLength);
+      assert.strictEqual(1 - eventCounter, queueLength);
+      eventCounter++;
+    };
+    sharp.queue.on('change', queueListener);
+    sharp(fixtures.inputJpg)
+      .resize(320, 240)
+      .toBuffer(function(err) {
+        if (err) throw err;
+        assert.strictEqual(2, eventCounter);
+        sharp.queue.removeListener('change', queueListener);
+        done();
+      });
   });
 
 });
