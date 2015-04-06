@@ -810,7 +810,7 @@ class ResizeWorker : public NanAsyncWorker {
         int extensionIndex = baton->output.find_last_of(".");
         std::string filename_no_extension = baton->output.substr(0, extensionIndex);
           std::cout << filename_no_extension << std::endl;
-        if (vips_dzsave(image, filename_no_extension.c_str(), "strip", !baton->withMetadata,
+        if (vips_dzsave(image, baton->output.c_str(), "strip", !baton->withMetadata,
             "tile_size", baton->tileSize, "overlap", baton->tileOverlap, NULL)) {
           return Error();
         }
