@@ -665,16 +665,6 @@ describe('Input/output', function() {
       done();
     });
 
-    it('Invalid fails - huge', function(done) {
-      var isValid = false;
-      try {
-        sharp().limitInputPixels(Math.pow(0x3FFF, 2) + 1);
-        isValid = true;
-      } catch (e) {}
-      assert(!isValid);
-      done();
-    });
-
     it('Invalid fails - string', function(done) {
       var isValid = false;
       try {
@@ -722,9 +712,9 @@ describe('Input/output', function() {
     sharp(fixtures.inputJpg)
       .resize(320, 240)
       .toBuffer(function(err) {
+        sharp.queue.removeListener('change', queueListener);
         if (err) throw err;
         assert.strictEqual(2, eventCounter);
-        sharp.queue.removeListener('change', queueListener);
         done();
       });
   });

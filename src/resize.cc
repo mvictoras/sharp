@@ -461,6 +461,15 @@ class ResizeWorker : public NanAsyncWorker {
             return Error();
           }
           vips_object_local(hook, gaussian);
+          // Sequential input requires a small linecache before use of convolution
+          if (baton->accessMethod == VIPS_ACCESS_SEQUENTIAL) {
+            VipsImage *lineCached;
+            if (vips_linecache(image, &lineCached, "access", VIPS_ACCESS_SEQUENTIAL, "tile_height", 1, "threaded", TRUE, NULL)) {
+              return Error();
+            }
+            vips_object_local(hook, lineCached);
+            image = lineCached;
+          }
           // Apply Gaussian function
           VipsImage *blurred;
           if (vips_convsep(image, &blurred, gaussian, "precision", VIPS_PRECISION_INTEGER, NULL)) {
@@ -859,7 +868,7 @@ class ResizeWorker : public NanAsyncWorker {
         argv[2] = info;
       } else {
         // Add file size to info
-        struct stat st;
+        GStatBuf st;
         g_stat(baton->output.c_str(), &st);
         info->Set(NanNew<String>("size"), NanNew<Uint32>(static_cast<uint32_t>(st.st_size)));
         argv[1] = info;
